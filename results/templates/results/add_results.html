@@ -1,0 +1,167 @@
+{% extends 'results/base.html' %}
+
+{% block title %}Add New Results{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>➕ Question 3: Add New Polling Unit Results</h2>
+    <p>Store election results for ALL parties for a new polling unit.</p>
+
+    <div class="info-box">
+        <p><strong>Instructions:</strong> Fill in the polling unit details below, then enter the vote count for each
+            party.
+            All parties will be saved, even those with 0 votes.</p>
+    </div>
+
+    <form method="POST" action="{% url 'results:add_results' %}" style="margin-top: 20px;">
+        {% csrf_token %}
+
+        <!-- Section 1: Polling Unit Location -->
+        <h3 style="color: #1a5f2a; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e0e0e0;">
+            Step 1: Polling Unit Location
+        </h3>
+
+        <div class="form-group">
+            <label for="lga_id">Local Government Area: *</label>
+            <select name="lga_id" id="lga_id" required onchange="loadWards(this.value)">
+                <option value="">-- Select LGA --</option>
+                {% for lga in lgas %}
+                <option value="{{ lga.uniqueid }}">{{ lga.lga_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="ward_id">Ward: *</label>
+            <select name="ward_id" id="ward_id" required>
+                <option value="">-- Select LGA First --</option>
+            </select>
+        </div>
+
+        <!-- Section 2: Polling Unit Details -->
+        <h3 style="color: #1a5f2a; margin: 30px 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid #e0e0e0;">
+            Step 2: Polling Unit Details
+        </h3>
+
+        <div class="form-group">
+            <label for="pu_name">Polling Unit Name: *</label>
+            <input type="text" name="pu_name" id="pu_name" required
+                placeholder="e.g., Primary School Hall, Town Hall, etc.">
+        </div>
+
+        <div class="form-group">
+            <label for="pu_number">Polling Unit Number (Optional):</label>
+            <input type="text" name="pu_number" id="pu_number" placeholder="e.g., DT2201001">
+        </div>
+
+        <div class="form-group">
+            <label for="entered_by">Your Name (Optional):</label>
+            <input type="text" name="entered_by" id="entered_by" placeholder="Enter your name">
+        </div>
+
+        <!-- Section 3: Party Results -->
+        <h3 style="color: #1a5f2a; margin: 30px 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid #e0e0e0;">
+            Step 3: Enter Results for ALL Parties
+        </h3>
+
+        <p style="color: #666; margin-bottom: 20px;">
+            Enter the number of votes for each party. Leave as 0 if the party received no votes.
+        </p>
+
+        <div class="party-grid">
+            {% for party in parties %}
+            <div class="party-input">
+                <label for="party_{{ party.partyid }}">{{ party.partyname }} ({{ party.partyid }})</label>
+                <input type="number" name="party_{{ party.partyid }}" id="party_{{ party.partyid }}" min="0" value="0"
+                    placeholder="0">
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Submit Section -->
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e0e0e0;">
+            <button type="submit" style="font-size: 1.1rem; padding: 15px 40px;">
+                💾 Save Polling Unit & Results
+            </button>
+            <a href="{% url 'results:index' %}" class="btn btn-secondary" style="margin-left: 10px;">Cancel</a>
+        </div>
+
+    </form>
+</div>
+
+<!-- Helpful Information -->
+<div class="card" style="margin-top: 20px;">
+    <h3 style="color: #1a5f2a;">💡 Tips</h3>
+    <ul style="list-style: disc; margin-left: 30px; margin-top: 10px; color: #666;">
+        <li>All fields marked with * are required</li>
+        <li>You must enter results for all parties (enter 0 for parties with no votes)</li>
+        <li>The polling unit will be created in the database along with all party results</li>
+        <li>After submission, you'll be redirected to view the new polling unit's results</li>
+    </ul>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Load wards when LGA is selected (chained dropdown)
+    function loadWards(lgaUniqueId) {
+        const wardSelect = document.getElementById('ward_id');
+        wardSelect.innerHTML = '<option value="">Loading...</option>';
+
+        if (!lgaUniqueId) {
+            wardSelect.innerHTML = '<option value="">-- Select LGA First --</option>';
+            return;
+        }
+
+        // Fetch wards for the selected LGA
+        fetch('/api/wards/' + lgaUniqueId + '/')
+            .then(response => response.json())
+            .then(wards => {
+                wardSelect.innerHTML = '<option value="">-- Select Ward --</option>';
+
+                if (wards.length === 0) {
+                    wardSelect.innerHTML = '<option value="">No wards found</option>';
+                    return;
+                }
+
+                wards.forEach(ward => {
+                    const option = document.createElement('option');
+                    option.value = ward.ward_id;
+                    option.textContent = ward.ward_name;
+                    wardSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading wards:', error);
+                wardSelect.innerHTML = '<option value="">Error loading wards</option>';
+            });
+    }
+
+    // Validate form before submission
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const lgaId = document.getElementById('lga_id').value;
+        const wardId = document.getElementById('ward_id').value;
+        const puName = document.getElementById('pu_name').value.trim();
+
+        if (!lgaId || !wardId || !puName) {
+            e.preventDefault();
+            alert('Please fill in all required fields:\n- Local Government Area\n- Ward\n- Polling Unit Name');
+            return false;
+        }
+
+        // Confirm submission
+        const totalVotes = Array.from(document.querySelectorAll('.party-input input'))
+            .reduce((sum, input) => sum + (parseInt(input.value) || 0), 0);
+
+        if (totalVotes === 0) {
+            if (!confirm('All party votes are 0. Are you sure you want to continue?')) {
+                e.preventDefault();
+                return false;
+            }
+        }
+
+        return true;
+    });
+</script>
+{% endblock %}

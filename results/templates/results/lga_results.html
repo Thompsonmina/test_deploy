@@ -1,0 +1,110 @@
+{% extends 'results/base.html' %}
+
+{% block title %}LGA Results{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>📈 Question 2: LGA Summed Results</h2>
+    <p>View the summed total results of all polling units under any Local Government Area.</p>
+    
+    <div class="info-box">
+        <p> These results are calculated by summing 
+        all individual polling unit results from the <code>announced_pu_results</code> table. 
+        We do NOT use the <code>announced_lga_results</code> table for this calculation.</p>
+    </div>
+    
+    <form method="POST" action="{% url 'results:lga_results' %}" style="margin-top: 20px;">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="lga">Select Local Government Area:</label>
+            <select name="lga" id="lga" required>
+                <option value="">-- Select an LGA --</option>
+                {% for lga in lgas %}
+                    <option value="{{ lga.uniqueid }}" 
+                            {% if selected_lga and lga.uniqueid == selected_lga.uniqueid %}selected{% endif %}>
+                        {{ lga.lga_name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <button type="submit">View Results</button>
+    </form>
+</div>
+
+{% if selected_lga %}
+<div class="card">
+    <h2>Results for: {{ selected_lga.lga_name }} LGA</h2>
+    
+    <div class="info-box">
+        <p><strong>LGA Details:</strong></p>
+        <p>{{ selected_lga.lga_description|default:selected_lga.lga_name }} | 
+           Polling Units in LGA: {{ polling_unit_count }}</p>
+    </div>
+    
+    {% if results %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Party</th>
+                    <th style="text-align: right;">Total Votes</th>
+                    <th style="text-align: right;">Percentage</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                <tr>
+                    <td>
+                        <span class="party-name">{{ result.party_abbreviation }}</span>
+                    </td>
+                    <td style="text-align: right;">
+                        <span class="party-score">{{ result.total_score|stringformat:"d" }}</span>
+                    </td>
+                    <td style="text-align: right;">
+                        {% if total_votes > 0 %}
+                            {% widthratio result.total_score total_votes 100 %}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <div class="total-section">
+            <h3>Grand Total Votes: {{ total_votes|stringformat:"d" }}</h3>
+            <p style="color: #666; margin-top: 10px;">
+                Sum of all party scores from polling units in this LGA
+            </p>
+        </div>
+        
+        <!-- Chart visualization -->
+        <div style="margin-top: 30px;">
+            <h4 style="margin-bottom: 15px;">Vote Distribution:</h4>
+            {% for result in results %}
+                <div style="margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>{{ result.party_abbreviation }}</span>
+                        <span>{{ result.total_score|stringformat:"d" }} ({% widthratio result.total_score total_votes 100 %}%)</span>
+                    </div>
+                    <div style="background: #e0e0e0; border-radius: 10px; height: 20px; overflow: hidden;">
+                        <div style="background: linear-gradient(90deg, #1a5f2a, #2d8a3e); height: 100%; width: {% widthratio result.total_score total_votes 100 %}%; border-radius: 10px;"></div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+    {% else %}
+        <div class="info-box">
+            <p>No polling unit results found for this LGA. This could mean:</p>
+            <ul style="margin-top: 10px; margin-left: 20px;">
+                <li>No polling units have recorded results yet</li>
+                <li>The polling units in this LGA don't have matching results in the database</li>
+            </ul>
+        </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

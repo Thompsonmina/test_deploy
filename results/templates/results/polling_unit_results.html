@@ -1,0 +1,118 @@
+{% extends 'results/base.html' %}
+
+{% block title %}Polling Unit Results{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>📊 Question 1: Polling Unit Results</h2>
+    <p>View election results for any individual polling unit in Delta State.</p>
+
+    <form method="POST" action="{% url 'results:polling_unit_results' %}" style="margin-top: 20px;">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="lga_select">Filter by Local Government Area (Optional):</label>
+            <select id="lga_select" onchange="filterPollingUnits()">
+                <option value="">-- All LGAs --</option>
+                {% for lga in lgas %}
+                <option value="{{ lga.lga_name }}">{{ lga.lga_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="polling_unit">Select Polling Unit:</label>
+            <select name="polling_unit" id="polling_unit" required>
+                <option value="">-- Select a Polling Unit --</option>
+                {% for pu in polling_units %}
+                <option value="{{ pu.uniqueid }}" data-lga="{{ pu.lga_name }}"
+                 {% if selected_pu and pu.uniqueid == selected_pu.uniqueid %}selected{% endif %}>
+                    {{ pu.lga_name }} - {{ pu.ward_name|default:"N/A" }} - {{ pu.polling_unit_name }} ({{
+                    pu.polling_unit_number|default:"N/A" }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit">View Results</button>
+    </form>
+</div>
+
+{% if selected_pu %}
+<div class="card">
+    <h2>Results for: {{ selected_pu.polling_unit_name }}</h2>
+
+    <div class="info-box">
+        <p><strong>Polling Unit Details:</strong></p>
+        <p>LGA: {{ selected_pu.lga_name }} | Ward: {{ selected_pu.ward_name|default:"N/A" }} | Unit Number: {{
+            selected_pu.polling_unit_number|default:"N/A" }}</p>
+    </div>
+
+    {% if results %}
+    <table>
+        <thead>
+            <tr>
+                <th>Party</th>
+                <th style="text-align: right;">Votes</th>
+                <th style="text-align: right;">Percentage</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in results %}
+            <tr>
+                <td>
+                    <span class="party-name">{{ result.party_abbreviation }}</span>
+                </td>
+                <td style="text-align: right;">
+                    <span class="party-score">{{ result.party_score|stringformat:"d" }}</span>
+                </td>
+                <td style="text-align: right;">
+                    {% if total_votes > 0 %}
+                    {% widthratio result.party_score total_votes 100 %}%
+                    {% else %}
+                    0%
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="total-section">
+        <h3>Total Votes: {{ total_votes|stringformat:"d" }}</h3>
+    </div>
+    {% else %}
+    <div class="info-box">
+        <p>No results found for this polling unit.</p>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Filter polling units based on selected LGA
+    function filterPollingUnits() {
+        const lgaSelect = document.getElementById('lga_select');
+        const puSelect = document.getElementById('polling_unit');
+        const selectedLGA = lgaSelect.value;
+
+        // Show/hide options based on LGA
+        for (let option of puSelect.options) {
+            if (option.value === '') continue; // Skip the placeholder
+
+            if (selectedLGA === '' || option.dataset.lga === selectedLGA) {
+                option.style.display = '';
+            } else {
+                option.style.display = 'none';
+            }
+        }
+
+        // Reset selection if current selection is hidden
+        if (puSelect.selectedOptions[0] && puSelect.selectedOptions[0].style.display === 'none') {
+            puSelect.value = '';
+        }
+    }
+</script>
+{% endblock %}

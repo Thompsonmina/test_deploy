@@ -1,0 +1,68 @@
+# ---- Python / Django ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+pip-wheel-metadata/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+*.sqlite3
+
+# Media & collected static (keep source static/ if you use it)
+media/
+staticfiles/
+
+# ---- Virtual environments ----
+venv/
+.venv/
+env/
+ENV/
+.virtualenv/
+pipenv/
+poetry.lock
+
+# ---- Environment variables / secrets ----
+.env
+.env.*
+*.env
+
+# ---- OS junk ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Editors / IDEs ----
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+
+# ---- Jupyter / misc ----
+.ipynb_checkpoints/
+
+# ---- Node (if present) ----
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ---- Coverage ----
+htmlcov/
+.coverage
+coverage.xml
+

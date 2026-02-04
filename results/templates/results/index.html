@@ -1,0 +1,76 @@
+{% extends 'results/base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Welcome to the Election Results System</h2>
+    <p>This application allows you to view and manage election results for Delta State, Nigeria.</p>
+    
+    <div style="margin-top: 30px;">
+        <h3 style="color: #1a5f2a; margin-bottom: 20px;">Available Features:</h3>
+        
+        <div style="display: grid; gap: 20px; margin-top: 20px;">
+            
+            <!-- Feature 1 -->
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 10px; border-left: 4px solid #1a5f2a;">
+                <h4 style="color: #1a5f2a; margin-bottom: 10px;">📊 Question 1: View Polling Unit Results</h4>
+                <p style="color: #666; margin-bottom: 15px;">
+                    Display detailed election results for any individual polling unit in Delta State.
+                    Select a polling unit from the dropdown to see all party scores.
+                </p>
+                <a href="{% url 'results:polling_unit_results' %}" class="btn">View Polling Unit Results →</a>
+            </div>
+            
+            <!-- Feature 2 -->
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 10px; border-left: 4px solid #2196f3;">
+                <h4 style="color: #2196f3; margin-bottom: 10px;">📈 Question 2: View LGA Summed Results</h4>
+                <p style="color: #666; margin-bottom: 15px;">
+                    Display the summed total results of all polling units under any selected Local Government Area.
+                    <strong>Note:</strong> Results are calculated from individual polling unit data, not from the announced_lga_results table.
+                </p>
+                <a href="{% url 'results:lga_results' %}" class="btn" style="background: #2196f3;">View LGA Results →</a>
+            </div>
+            
+            <!-- Feature 3 -->
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 10px; border-left: 4px solid #ff9800;">
+                <h4 style="color: #ff9800; margin-bottom: 10px;">➕ Question 3: Add New Results</h4>
+                <p style="color: #666; margin-bottom: 15px;">
+                    Store election results for ALL parties for a new polling unit.
+                    Uses user-friendly chained dropdowns for selecting LGA and Ward.
+                </p>
+                <a href="{% url 'results:add_results' %}" class="btn" style="background: #ff9800;">Add New Results →</a>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 20px;">
+    <h2>About This Application</h2>
+    <p>This application was developed as a solution for the Bincom Developer Test.</p>
+    
+    <div style="margin-top: 20px;">
+        <h4>Technical Details:</h4>
+        <ul style="list-style: disc; margin-left: 30px; margin-top: 10px; color: #666;">
+            <li>Built with Python Django framework</li>
+            <li>Uses SQLite database (converted from provided MySQL dump)</li>
+            <li>Contains data for Delta State (state_id = 25)</li>
+            <li>Clean, responsive design with no external dependencies</li>
+        </ul>
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <h4>Database Tables Used:</h4>
+        <ul style="list-style: disc; margin-left: 30px; margin-top: 10px; color: #666;">
+            <li><strong>states</strong> - List of Nigerian states</li>
+            <li><strong>lga</strong> - Local Government Areas</li>
+            <li><strong>ward</strong> - Electoral wards</li>
+            <li><strong>polling_unit</strong> - Individual polling units</li>
+            <li><strong>party</strong> - Political parties</li>
+            <li><strong>announced_pu_results</strong> - Polling unit election results</li>
+            <li><strong>announced_lga_results</strong> - LGA level results (for comparison only)</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
